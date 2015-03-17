@@ -8,18 +8,25 @@ A small component experiment using jQuery & Firebase.
 
 ## Logic-less handlebars templates
 
-
 ## Component Specification
 Components are exposed as a presentation-layer, reusable element. They abstract away one level of complexity, typically to perform a single task. Their success requires several elements to be present:
+
 - HTML Imports
+
 - HTML Templates
+
 - Structured JSON data retrieval
+
 - Logic-less handlebars-style template substitution
+
 - Activate & fulfill a component
+
 - Shadow DOM
 
 - However, another equally-challenging element of this feature is typically left out of other component specifications:
+
 - Feeding data from many documents into a structured JSON document
+
 - Feeding user-data into a structured JSON document
 
 - Allowing end-users to feed data into a structured JSON document
