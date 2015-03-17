@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo</title>
+</head>
+<body>
+
+<!-- This is a container for a collection component -->
+<div id="component-container" data-source="http://wpages.co/test/foo.json" data-sort="d" data-limit="3" data-offset="0">
+    <h2>{{title}}</h2>
+    <p data-show-if="hasDescription">{{description}}</p>
+</div>
+<!-- End collections component -->
+
+<!-- This contains an input component -->
+<div id="input-component" data-destination="/demo">
+    Title: <input type="text" name="title"/>
+    <br/>
+    Description: <br/>
+    <textarea name="description" cols="30" rows="10"></textarea>
+    <br/>
+    <button data-action="create">Create Record</button>
+</div>
+<!-- End input component -->
+
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.5.0/lodash.min.js"></script>
+<script src="https://cdn.firebase.com/js/client/2.2.2/firebase.js"></script>
+<script src="components.js"></script>
+<script>
+    components.init();
+</script>
+</body>
+</html>
