@@ -213,20 +213,19 @@ var components = (function () {
      * CREATE A RECORD
      */
     function createRecord (destination, data) {
-        console.log(destination, data);
-        // Check that our user is authenticated
-        // Create a new record
+        // Todo: Check that our user is authenticated
 
-        // Get the index
+        // Create a new record
         var ref = components.get('firebaseRef');
 
-        ref.child(destination + "/index").on("value", function(snapshot) {
-            var index = snapshot.val();
+        ref.child(destination).on("value", function(snapshot) {
+            var base = snapshot.val();
+            var index = base.index;
             if (!index) index = 0;
             var next = index + 1;
 
-            var post = {};
-            post[next] = data;
+            base[next] = data;
+            base.index = next;
             ref.child(destination).set(post);
         });
 
@@ -239,15 +238,15 @@ var components = (function () {
     obj = {
         data: {},
         executeFunctionArray: executeFunctionArray,
-        registerGlobal: registerGlobal,
-        get: get,
-        set: set,
-        init: init,
+        assignIDsToElements: assignIDsToElements,
         buildComponents: buildComponents,
         inputComponents: inputComponents,
+        registerGlobal: registerGlobal,
+        parseTemplate: parseTemplate,
         HTMLIncludes: HTMLIncludes,
-        assignIDsToElements: assignIDsToElements,
-        parseTemplate: parseTemplate
+        init: init,
+        get: get,
+        set: set
 
     };
 
