@@ -41,14 +41,11 @@ var components = (function () {
      */
     function HTMLIncludes () {
         $(document).ready(function () {
-            $('.html-include').each(function () {
-                var sourceURL = $(this).attr('data-source-url');
+            $('[data-include-url]').each(function () {
+                var sourceURL = $(this).attr('data-include-url');
 
                 $(this).load(sourceURL, function () {
-
-                    var _i = $('body').attr('data-id-offset') || 0;
-
-                    // Ensure all elements have IDs
+                    // Ensure all new elements have IDs
                     assignIDsToElements();
                 });
             });
@@ -308,14 +305,12 @@ var components = (function () {
 
         ref.child(destination).on("value", function(snapshot) {
             var base = snapshot.val();
-
-            if (!base)
-                ref.child(destination).set(true);
+            if (!base) ref.child(destination).set(true);
         });
 
-        data.created = + new Date;
-
         var next = PUID();
+        data.created = + new Date;
+        data.updated = data.created;
 
         ref.child(destination +"/"+next).set(data);
     }
@@ -344,7 +339,6 @@ var components = (function () {
         init: init,
         get: get,
         set: set
-
     };
 
     obj = $.extend({}, _, obj);
