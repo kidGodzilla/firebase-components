@@ -123,15 +123,17 @@ var components = (function () {
 
         // On data update
         ref.child(dataSource).on("value", function(snapshot) {
-            var base = snapshot.val();
-            renderComponent($component, base, template);
+            var data = snapshot.val();
+            // Normalize our incoming data
+            data = normalizeFirebaseData(data);
+            renderComponent($component, data, template);
         });
     }
 
     /**
      * Normalize JSON data
      */
-    function normalizeData (data) {
+    function normalizeFirebaseData (data) {
         var dataObj = data;
         data = [];
 
@@ -153,12 +155,7 @@ var components = (function () {
     function renderComponent ($component, data, template) {
 
         /**
-         * Normalize our incoming data
-         */
-        data = normalizeData(data);
-
-        /**
-         * Pagination & Sorting
+         * Handle Pagination & Sorting
          */
         // Determine offset
         var offset = parseInt($component.attr('data-offset')) || 0;
@@ -168,24 +165,30 @@ var components = (function () {
             data.reverse();
 
         // Total should be our data.length or limit (minus offset), whichever is greater
-        var total = parseInt($component.attr('data-limit')) || data.length - offset;
-        if (data.length - offset < total) total = data.length - offset;
+        var limit = parseInt($component.attr('data-limit')) || data.length - offset;
+        if (data.length - offset < limit) limit = data.length - offset;
 
         /**
-         * Cache our component reference, data, & template in a lookup table
+         * Cache everything in a lookup table
          */
-        var comp = {};
-        var id = $component.attr('id');
-        comp.$component = $component;
-        comp.data = data;
-        comp.template = template;
-        lookup[id] = comp;
+        cacheInLookup($component, data, template);
 
         /**
          * Render data to template
          */
-        renderTemplateToComponent($component, data, template, total, offset);
+        renderTemplateToComponent($component, data, template, limit, offset);
+    }
 
+    /**
+     * Cache $component reference, data, & template in _lookup_
+     */
+    function cacheInLookup ($component, data, template) {
+        var component = {};
+        var id = $component.attr('id');
+        component.$component = $component;
+        component.data = data;
+        component.template = template;
+        lookup[id] = component;
     }
 
     /**
@@ -206,24 +209,34 @@ var components = (function () {
             // Fill in the blanks, v.2
             $tmp = $($.parseHTML("<div>" + parseTemplate(data[i], $tmp.html()) + "</div>"));
 
-            // data-show-if
-            $tmp.find('[data-show-if]').each(function () {
-                var $this = $(this);
-                data[i][$this.attr('data-show-if')] ? $this.show() : $this.hide();
-            });
-
-            // data-hide-if
-            $tmp.find('[data-hide-if]').each(function () {
-                var $this = $(this);
-                data[i][$this.attr('data-show-if')] ? $this.hide() : $this.show();
-            });
-
-            // Todo: data-show-if-function & data-hide-if-function
+            // Add in our helper functionality
+            $tmp = addHelpers($tmp, data[i]);
 
             // Append the item
             var item = $tmp.children();
             $component.append(item);
         }
+    }
+
+    /**
+     * Helpers
+     */
+    function addHelpers ($tmp, model) {
+        // data-show-if
+        $tmp.find('[data-show-if]').each(function () {
+            var $this = $(this);
+            model[$this.attr('data-show-if')] ? $this.show() : $this.hide();
+        });
+
+        // data-hide-if
+        $tmp.find('[data-hide-if]').each(function () {
+            var $this = $(this);
+            model[$this.attr('data-show-if')] ? $this.hide() : $this.show();
+        });
+
+        // Todo: data-show-if-function & data-hide-if-function
+
+        return $tmp;
     }
 
     /**
