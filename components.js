@@ -1,6 +1,11 @@
 var components = (function () {
 
     /**
+     * Component lookup table
+     */
+    var lookup = {};
+
+    /**
      * Find highest data-id-offset
      */
     function findDataIDOffset (callback) {
@@ -92,50 +97,41 @@ var components = (function () {
         });
     }
 
-    var comps = [];
-
     /**
      * DATA SOURCE
      */
     function buildComponents () {
         $('[data-source]').each(function () {
-            var $this = $(this);
-
-            var component = {};
-            component.id = $this.attr('id');
-            component.dataSource = $this.attr('data-source');
-            comps.push(component);
-
-            // Construct the template
-            var template = $this.clone();
-
-            // Empty container
-            $this.html('');
-
-            // Watch for firebase updates
-            var ref = components.get('firebaseRef');
-
-            // Get destination
-            var destination = component.dataSource;
-
-            ref.child(destination).on("value", function(snapshot) {
-                var base = snapshot.val();
-                renderComponent($this, base, template);
-            });
+            var id = $(this).attr('id');
+            buildComponent(id);
         });
     }
 
     /**
-     * Render a component with a specific data payload
+     * Build a component
      */
-    function renderComponent ($this, data, template) {
+    function buildComponent (id) {
+        var $component = $('#' + id);
+        var dataSource = $component.attr('data-source');
+        var template = $component.clone();
 
-        // Reset $this
-        $this.html('');
+        // Empty the container
+        $component.html('');
 
-        // Determine offset
-        var offset = parseInt($this.attr('data-offset')) || 0;
+        // Watch for firebase updates
+        var ref = components.get('firebaseRef');
 
+        // On data update
+        ref.child(dataSource).on("value", function(snapshot) {
+            var base = snapshot.val();
+            renderComponent($component, base, template);
+        });
+    }
+
+    /**
+     * Normalize JSON data
+     */
+    function normalizeData (data) {
         var dataObj = data;
         data = [];
 
@@ -148,16 +144,59 @@ var components = (function () {
             return b.created - a.created;
         });
 
+        return data;
+    }
+
+    /**
+     * Render a component with a specific data payload
+     */
+    function renderComponent ($component, data, template) {
+
+        /**
+         * Normalize our incoming data
+         */
+        data = normalizeData(data);
+
+        /**
+         * Pagination & Sorting
+         */
+        // Determine offset
+        var offset = parseInt($component.attr('data-offset')) || 0;
+
         // Reverse if sort order is descending
-        if ($this.attr('data-sort').toLowerCase()[0] === "d")
+        if ($component.attr('data-sort').toLowerCase()[0] === "d")
             data.reverse();
 
         // Total should be our data.length or limit (minus offset), whichever is greater
-        var total = parseInt($this.attr('data-limit')) || data.length - offset;
+        var total = parseInt($component.attr('data-limit')) || data.length - offset;
         if (data.length - offset < total) total = data.length - offset;
 
+        /**
+         * Cache our component reference, data, & template in a lookup table
+         */
+        var comp = {};
+        var id = $component.attr('id');
+        comp.$component = $component;
+        comp.data = data;
+        comp.template = template;
+        lookup[id] = comp;
+
+        /**
+         * Render data to template
+         */
+        renderTemplateToComponent($component, data, template, total, offset);
+
+    }
+
+    /**
+     * Render Template to Component
+     */
+    function renderTemplateToComponent ($component, data, template, limit, offset) {
+        // Reset our $component
+        $component.html('');
+
         // Loop through applicable JSON rows
-        for (var i = 0 + offset; i < total + offset; i++) {
+        for (var i = 0 + offset; i < limit + offset; i++) {
 
             // Create a clone of the template
             var tmp = $(template).clone();
@@ -183,7 +222,7 @@ var components = (function () {
 
             // Append the item
             var item = $tmp.children();
-            $this.append(item);
+            $component.append(item);
         }
     }
 
@@ -280,6 +319,7 @@ var components = (function () {
      */
     obj = {
         data: {},
+        renderTemplateToComponent: renderTemplateToComponent,
         executeFunctionArray: executeFunctionArray,
         assignIDsToElements: assignIDsToElements,
         buildComponents: buildComponents,
@@ -287,7 +327,7 @@ var components = (function () {
         registerGlobal: registerGlobal,
         parseTemplate: parseTemplate,
         HTMLIncludes: HTMLIncludes,
-        list: comps,
+        _lookup_: lookup,
         init: init,
         get: get,
         set: set
