@@ -66,6 +66,7 @@ var components = (function () {
         $('[data-destination]').each(function () {
             var $component = $(this);
             $component.find('button[data-action=create]').click(function () {
+                console.log('clicked');
 
                 var destination = $component.attr('data-destination');
                 var data = {};
@@ -91,64 +92,99 @@ var components = (function () {
         });
     }
 
+    var comps = [];
+
     /**
      * DATA SOURCE
      */
     function buildComponents () {
         $('[data-source]').each(function () {
-            // Construct the template
             var $this = $(this);
+
+            var component = {};
+            component.id = $this.attr('id');
+            component.dataSource = $this.attr('data-source');
+            comps.push(component);
+
+            // Construct the template
             var template = $this.clone();
 
             // Empty container
             $this.html('');
 
-            // Determine offset
-            var offset = parseInt($this.attr('data-offset')) || 0;
+            // Watch for firebase updates
+            var ref = components.get('firebaseRef');
 
-            // Get data
-            var dataURL = $this.attr('data-source');
-            $.getJSON(dataURL, function (data) {
+            // Get destination
+            var destination = component.dataSource;
 
-                // Reverse if sort order is descending
-                if ($this.attr('data-sort').toLowerCase()[0] === "d")
-                    data.reverse();
-
-                // Total should be our data.length or limit (minus offset), whichever is greater
-                var total = parseInt($this.attr('data-limit')) || data.length - offset;
-                if (data.length - offset < total) total = data.length - offset;
-
-                // Loop through applicable JSON rows
-                for (var i = 0 + offset; i < total + offset; i++) {
-
-                    // Create a clone of the template
-                    var tmp = $(template).clone();
-                    var $tmp = $(tmp);
-                    $tmp.attr('id', '');
-
-                    // Fill in the blanks, v.2
-                    $tmp = $($.parseHTML("<div>" + parseTemplate(data[i], $tmp.html()) + "</div>"));
-
-                    // data-show-if
-                    $tmp.find('[data-show-if]').each(function () {
-                        var $this = $(this);
-                        data[i][$this.attr('data-show-if')] ? $this.show() : $this.hide();
-                    });
-
-                    // data-hide-if
-                    $tmp.find('[data-hide-if]').each(function () {
-                        var $this = $(this);
-                        data[i][$this.attr('data-show-if')] ? $this.hide() : $this.show();
-                    });
-
-                    // Todo: data-show-if-function & data-hide-if-function
-
-                    // Append the item
-                    var item = $tmp.children();
-                    $this.append(item);
-                }
+            ref.child(destination).on("value", function(snapshot) {
+                var base = snapshot.val();
+                renderComponent($this, base, template);
             });
         });
+    }
+
+    /**
+     * Render a component with a specific data payload
+     */
+    function renderComponent ($this, data, template) {
+
+        // Reset $this
+        $this.html('');
+
+        // Determine offset
+        var offset = parseInt($this.attr('data-offset')) || 0;
+
+        var dataObj = data;
+        data = [];
+
+        for (var obj in dataObj) {
+            data.push(dataObj[obj]);
+        }
+
+        // Sort by created key
+        data.sort(function(a, b){
+            return b.created - a.created;
+        });
+
+        // Reverse if sort order is descending
+        if ($this.attr('data-sort').toLowerCase()[0] === "d")
+            data.reverse();
+
+        // Total should be our data.length or limit (minus offset), whichever is greater
+        var total = parseInt($this.attr('data-limit')) || data.length - offset;
+        if (data.length - offset < total) total = data.length - offset;
+
+        // Loop through applicable JSON rows
+        for (var i = 0 + offset; i < total + offset; i++) {
+
+            // Create a clone of the template
+            var tmp = $(template).clone();
+            var $tmp = $(tmp);
+            $tmp.attr('id', '');
+
+            // Fill in the blanks, v.2
+            $tmp = $($.parseHTML("<div>" + parseTemplate(data[i], $tmp.html()) + "</div>"));
+
+            // data-show-if
+            $tmp.find('[data-show-if]').each(function () {
+                var $this = $(this);
+                data[i][$this.attr('data-show-if')] ? $this.show() : $this.hide();
+            });
+
+            // data-hide-if
+            $tmp.find('[data-hide-if]').each(function () {
+                var $this = $(this);
+                data[i][$this.attr('data-show-if')] ? $this.hide() : $this.show();
+            });
+
+            // Todo: data-show-if-function & data-hide-if-function
+
+            // Append the item
+            var item = $tmp.children();
+            $this.append(item);
+        }
     }
 
     /**
@@ -191,14 +227,15 @@ var components = (function () {
      */
     function init () {
         $(document).ready(function () {
+            // Assign Ids to elements
             findDataIDOffset(assignIDsToElements);
 
-            // Firebase
-
+            // Get Firebase
             var firebaseSite = $('body[data-firebase-site]').attr('data-firebase-site');
             if (!firebaseSite || firebaseSite.length === 0)
                 firebaseSite = "component-playground";
 
+            // Initialize Firebase
             var firebaseRef = new Firebase("https://" + firebaseSite + ".firebaseio.com/");
             components.set('firebaseSite', firebaseSite);
             components.set('firebaseRef', firebaseRef);
@@ -215,21 +252,27 @@ var components = (function () {
     function createRecord (destination, data) {
         // Todo: Check that our user is authenticated
 
-        // Create a new record
         var ref = components.get('firebaseRef');
 
         ref.child(destination).on("value", function(snapshot) {
             var base = snapshot.val();
-            var index = base.index;
-            if (!index) index = 0;
-            var next = index + 1;
 
-            base[next] = data;
-            base.index = next;
-            ref.child(destination).set(post);
+            if (!base)
+                ref.child(destination).set(true);
         });
 
+        data.created = + new Date;
 
+        var next = PUID();
+
+        ref.child(destination +"/"+next).set(data);
+    }
+
+    /**
+     * PSEUDO-UNIQUE IDENTIFIER
+     */
+    function PUID () {
+        return Math.random().toString(36).substring(2);
     }
 
     /**
@@ -244,6 +287,7 @@ var components = (function () {
         registerGlobal: registerGlobal,
         parseTemplate: parseTemplate,
         HTMLIncludes: HTMLIncludes,
+        list: comps,
         init: init,
         get: get,
         set: set
