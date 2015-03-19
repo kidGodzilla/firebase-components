@@ -56,6 +56,7 @@ var components = (function () {
      * PARSE LOGIC-LESS HANDLEBARS TEMPLATES
      */
     function parseTemplate (data, template) {
+
         for(var current in data) {
             current = current.trim();
             if (current) template = template.replace(new RegExp('{{(\\s+|)'+current+'(\\s+|)}}','g'), data[current]);
@@ -138,7 +139,9 @@ var components = (function () {
         data = [];
 
         for (var obj in dataObj) {
-            data.push(dataObj[obj]);
+            var tmp = dataObj[obj];
+            if (!tmp.id) tmp.id = obj;
+            data.push(tmp);
         }
 
         // Sort by created key

@@ -39,15 +39,19 @@
                     <th>Last updated timestamp</th>
                 </tr>
                 </thead>
+                <!-- This is a simple component. It is created by adding [data-source] to any tag. This tag becomes the component container -->
                 <tbody id="table-row" data-source="/demo" data-sort="d" data-limit="32" data-offset="0">
+                    <!-- Whatever is inside the component becomes the template for each item in the model -->
                     <tr>
-                        <td>{{key}}</td>
+                        <td>{{id}}</td>
                         <td>{{title}}</td>
                         <td>{{description}}</td>
                         <td>{{created}}</td>
                         <td>{{updated}}</td>
                     </tr>
+                    <!-- End template -->
                 </tbody>
+                <!-- End component -->
             </table>
             <div id="source-button" class="btn btn-primary btn-xs" style="display: none;">&lt; &gt;</div></div><!-- /example -->
     </div>
