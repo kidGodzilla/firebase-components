@@ -56,8 +56,10 @@ var components = (function () {
      * PARSE LOGIC-LESS HANDLEBARS TEMPLATES
      */
     function parseTemplate (data, template) {
-        for(var current in data)
-            template = template.replace(new RegExp('{{(\\s*)'+current+'(\\s*)}}','g'), data[current]);
+        for(var current in data) {
+            current = current.trim();
+            if (current) template = template.replace(new RegExp('{{(\\s+|)'+current+'(\\s+|)}}','g'), data[current]);
+        }
 
         template = template.replace(new RegExp('{{(.+)}}','g'), '');
 
@@ -71,7 +73,6 @@ var components = (function () {
         $('[data-destination]').each(function () {
             var $component = $(this);
             $component.find('button[data-action=create]').click(function () {
-                console.log('clicked');
 
                 var destination = $component.attr('data-destination');
                 var data = {};
@@ -195,30 +196,30 @@ var components = (function () {
      */
     function renderTemplateToComponent ($component, data, template, limit, offset) {
 
-        console.log(template.html())
-
         // Reset our $component
         $component.html('');
+
+        // Component tagName
+        var componentTagName = $component.prop('tagName');
+        componentTagName = componentTagName.trim().toLowerCase();
+        if (!componentTagName) componentTagName = "div";
 
         // Loop through applicable JSON rows
         for (var i = 0 + offset; i < limit + offset; i++) {
 
             // Create a clone of the template
             var tmp = $(template).clone();
-
             var $tmp = $(tmp);
             $tmp.attr('id', '');
 
             // Fill in the blanks, v.2
-            $tmp = $($.parseHTML("<div>" + parseTemplate(data[i], $tmp.html()) + "</div>"));
+            $tmp = $($.parseHTML("<"+componentTagName+">" + parseTemplate(data[i], $tmp.html()) + "</"+componentTagName+">"));
 
             // Add in our helper functionality
             $tmp = addHelpers($tmp, data[i]);
 
             // Append the item
-            var item = $tmp.children();
-
-            $component.append(item);
+            $component.append($tmp.children());
         }
     }
 
