@@ -4,6 +4,8 @@ var components = (function () {
      * Component lookup table
      */
     var lookup = {};
+    var local = {};
+    var bindings = {};
 
     /**
      * Find highest data-id-offset
@@ -96,6 +98,33 @@ var components = (function () {
 
                 createRecord(destination, data);
             });
+
+            /**
+             * Update record
+             */
+            $component.find('button[data-action=update]').click(function () {
+
+                var destination = $component.attr('data-destination');
+                var data = {};
+
+                $component.find('input[name]').each(function () {
+                    var name = $(this).attr('name');
+                    data[name] = $(this).val();
+
+                    // Reset me
+                    $(this).val('');
+                });
+
+                $component.find('textarea[name]').each(function () {
+                    var name = $(this).attr('name');
+                    data[name] = $(this).val();
+
+                    // Reset me
+                    $(this).val('');
+                });
+
+                updateRecord(destination, data);
+            });
         });
     }
 
@@ -115,20 +144,34 @@ var components = (function () {
     function buildComponent ($component) {
         var dataSource = $component.attr('data-source');
         var template = $component.clone();
+        var id = $component.attr('id');
+
+        // Update a lookup table with bindings
+        if (!components.bindings[dataSource])
+            components.bindings[dataSource] = [];
+
+        components.bindings[dataSource].push(id);
 
         // Empty the container
         $component.html('');
 
-        // Watch for firebase updates
-        var ref = components.get('firebaseRef');
-
-        // On data update
-        ref.child(dataSource).on("value", function(snapshot) {
-            var data = snapshot.val();
+        if (dataSource === "@") {
+            var data = local;
             // Normalize our incoming data
-            data = normalizeFirebaseData(data);
+            data = [components.local];
             renderComponent($component, data, template);
-        });
+        } else {
+            // Watch for firebase updates
+            var ref = components.get('firebaseRef');
+
+            // On data update
+            ref.child(dataSource).on("value", function(snapshot) {
+                var data = snapshot.val();
+                // Normalize our incoming data
+                data = normalizeFirebaseData(data);
+                renderComponent($component, data, template);
+            });
+        }
     }
 
     /**
@@ -180,6 +223,7 @@ var components = (function () {
          * Render data to template
          */
         renderTemplateToComponent($component, data, template, limit, offset);
+        console.log('rendered')
     }
 
     /**
@@ -232,6 +276,7 @@ var components = (function () {
     function addHelpers ($tmp, model) {
         // data-show-if
         $tmp.find('[data-show-if]').each(function () {
+            console.log(this);
             var $this = $(this);
             model[$this.attr('data-show-if')] ? $this.show() : $this.hide();
         });
@@ -248,18 +293,53 @@ var components = (function () {
     }
 
     /**
-     * component datastore getter
+     * component internal datastore getter
      */
     function get (key) {
         return components.data[key];
     }
 
     /**
-     * component datastore setter
+     * component internal datastore setter
      */
     function set (key, value) {
         return components.data[key] = value;
     }
+
+    /**
+     * component instance datastore getter
+     */
+    function getLocal (key) {
+        return components.local[key];
+    }
+
+    /**
+     * component instance datastore setter
+     */
+    function setLocal (data) {
+        components.local = $.extend({}, local, data);
+        renderAllComponents();
+    }
+
+    function renderAllComponents() {
+        var bindingsLookup = components.bindings;
+        if (bindingsLookup["@"]) {
+            var boundLocally = bindingsLookup["@"];
+            for (var k = 0; k < boundLocally.length; k++) {
+                var id = boundLocally[k];
+                components._lookup_[id].data = components.local;
+            }
+        }
+
+        var componentsLookup = components._lookup_;
+        for (j in componentsLookup) {
+            var c = componentsLookup[j];
+            console.log(c.$component);
+            renderComponent(c.$component, c.data, c.template);
+        }
+    }
+
+
 
     /**
      * Executes an array of functions, Sequentially
@@ -306,24 +386,35 @@ var components = (function () {
         });
     }
 
+    function updateRecord (destination, data) {
+
+    }
+
     /**
      * CREATE A RECORD
      */
     function createRecord (destination, data) {
         // Todo: Check that our user is authenticated
 
-        var ref = components.get('firebaseRef');
+        if (destination === "@") {
+            // Local reference
+            data.updated = + new Date;
+            components.setLocal(data);
+        } else {
+            // Use firebase
+            var ref = components.get('firebaseRef');
 
-        ref.child(destination).on("value", function(snapshot) {
-            var base = snapshot.val();
-            if (!base) ref.child(destination).set(true);
-        });
+            ref.child(destination).on("value", function(snapshot) {
+                var base = snapshot.val();
+                if (!base) ref.child(destination).set(true);
+            });
 
-        var next = PUID();
-        data.created = + new Date;
-        data.updated = data.created;
+            var next = PUID();
+            data.created = + new Date;
+            data.updated = data.created;
 
-        ref.child(destination +"/"+next).set(data);
+            ref.child(destination +"/"+next).set(data);
+        }
     }
 
     /**
@@ -341,12 +432,17 @@ var components = (function () {
         renderTemplateToComponent: renderTemplateToComponent,
         executeFunctionArray: executeFunctionArray,
         assignIDsToElements: assignIDsToElements,
+        renderAllComponents: renderAllComponents,
         buildComponents: buildComponents,
         inputComponents: inputComponents,
         registerGlobal: registerGlobal,
         parseTemplate: parseTemplate,
         HTMLIncludes: HTMLIncludes,
+        bindings: bindings,
+        getLocal: getLocal,
+        setLocal: setLocal,
         _lookup_: lookup,
+        local: local,
         init: init,
         get: get,
         set: set
