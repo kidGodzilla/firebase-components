@@ -8,6 +8,15 @@ var components = (function () {
     var bindings = {};
 
     /**
+     * Dates for Humans (Now with time!)
+     */
+    function datesForHumans (int) {
+        int = int || + new Date;
+        int = parseInt(int, 10);
+        return new Date(int).toString().split(' ').splice(0, 5).join(' ');
+    }
+
+    /**
      * Find highest data-id-offset
      */
     function findDataIDOffset (callback) {
