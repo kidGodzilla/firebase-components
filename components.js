@@ -374,7 +374,7 @@ var components = (function () {
     /**
      * Initialize the components object
      */
-    function init () {
+    function init (callback) {
         $(document).ready(function () {
             // Assign Ids to elements
             findDataIDOffset(assignIDsToElements);
@@ -392,6 +392,8 @@ var components = (function () {
             HTMLIncludes();
             buildComponents();
             inputComponents();
+
+            if (callback && typeof(callback) === "function") callback();
         });
     }
 

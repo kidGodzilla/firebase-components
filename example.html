@@ -1,0 +1,27 @@
+<div class="owl-carousel" data-source="/logos2" data-sort="descending" data->
+    <div>
+        <img src="{{image}}" alt="{{title}}" />
+        <p class="text-center">{{type}}</p>
+    </div>
+</div>
+
+<div data-destination="/logos2">
+    <input type="text" name="image">
+    <input type="text" name="type">
+    <!--<button name="submit" data-action="create">Submit</button>-->
+</div>
+
+<script>
+    components.init(function () {
+        var owl = $('.owl-carousel');
+        owl.owlCarousel({
+            items: 4,
+            loop: true,
+            margin: 50,
+            dots: true,
+            autoplay: true,
+            autoplayTimeout: 2500,
+            autoplayHoverPause: true
+        });
+    });
+</script>
