@@ -79,6 +79,37 @@
                 </fieldset>
             </form>
 
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">How it works</h3>
+                </div>
+                <div class="panel-body">
+                    <pre>
+&#x3C;!-- This is a simple component. --&#x3E;
+&#x3C;tbody <span class="text-danger" data-toggle="tooltip" data-placement="top" data-original-title="Where to look for the data">data-source=&#x22;/demo&#x22;</span> <span class="text-info" data-toggle="tooltip" data-placement="top" data-original-title="Data sort direction (optional)">data-sort=&#x22;descending&#x22;</span> <span class="text-warning" data-toggle="tooltip" data-placement="top" data-original-title="# of items to display (optional)">data-limit=&#x22;32&#x22;</span> <span class="text-primary" data-toggle="tooltip" data-placement="top" data-original-title="Which item to start with (optional)">data-offset=&#x22;2&#x22;</span>&#x3E;
+    &#x3C;!-- <span class="text-info" data-toggle="tooltip" data-placement="top" data-original-title="Anything inside a component becomes a template">Template</span> --&#x3E;
+        &#x3C;tr&#x3E;
+            &#x3C;td&#x3E;<span class="text-danger" data-toggle="tooltip" data-placement="top" data-original-title="Mustache templates correspond to input[name]">{{id}}</span>&#x3C;/td&#x3E;
+            &#x3C;td&#x3E;{{title}}&#x3C;/td&#x3E;
+            &#x3C;td&#x3E;{{description}}&#x3C;/td&#x3E;
+            &#x3C;td&#x3E;{{created}}&#x3C;/td&#x3E;
+            &#x3C;td&#x3E;{{updated}}&#x3C;/td&#x3E;
+        &#x3C;/tr&#x3E;
+    &#x3C;!-- End template --&#x3E;
+&#x3C;/tbody&#x3E;
+&#x3C;!-- End component --&#x3E;
+
+&#x3C;!-- This is the input component -->
+&#x3C;form id=&#x22;input-component&#x22; data-destination=&#x22;/demo&#x22;&#x3E;
+    &#x3C;input name=&#x22;title&#x22; type=&#x22;text&#x22; id=&#x22;inputTitle&#x22; placeholder=&#x22;This is the Title&#x22;&#x3E;
+    &#x3C;textarea name=&#x22;description&#x22; rows=&#x22;3&#x22; id=&#x22;textArea&#x22; placeholder=&#x22;This is the description&#x22;&#x3E;&#x3C;/textarea&#x3E;
+    &#x3C;button data-action=&#x22;create&#x22; type=&#x22;submit&#x22; &#x3E;Submit&#x3C;/button&#x3E;
+&#x3C;/form&#x3E;
+&#x3C;!-- End component -->
+                    </pre>
+                </div>
+            </div>
+
     </div>
 
     <!--<footer class="footer">-->
@@ -89,6 +120,8 @@
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<script src="bootswatch.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.5.0/lodash.min.js"></script>
 <script src="https://cdn.firebase.com/js/client/2.2.2/firebase.js"></script>
 <script src="components.js"></script>
