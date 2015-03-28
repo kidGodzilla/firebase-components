@@ -5,21 +5,21 @@
 /**
  * Generic core object
  */
-var router = (function () {
+var Core = function () {
 
     /**
-     * Router datastore getter
+     * datastore getter
      */
     function get (key) {
-        return router.data[key];
+        return this.data[key];
     }
 
 
     /**
-     * Router datastore setter
+     * datastore setter
      */
     function set (key, value) {
-        return router.data[key] = value;
+        return this.data[key] = value;
     }
 
 
@@ -38,15 +38,15 @@ var router = (function () {
 
 
     /**
-     * Registers a new global on the router object
+     * Registers a new global on the current object
      */
     function registerGlobal (key, value) {
 
-        if (typeof(router[key]) === "undefined") {
+        if (typeof(this[key]) === "undefined") {
 
             if (typeof(value) === "function") {
 
-                router[key] = function () {
+                this[key] = function () {
                     /**
                      * Prepare Arguments
                      *
@@ -62,8 +62,8 @@ var router = (function () {
                     /**
                      * Execute Before hooks on the arguments
                      */
-                    if (router.hooks[key] && router.hooks[key].before && router.hooks[key].before.length > 0)
-                        args = executeFunctionArray(router.hooks[key].before, args);
+                    if (this.hooks[key] && this.hooks[key].before && this.hooks[key].before.length > 0)
+                        args = executeFunctionArray(this.hooks[key].before, args);
 
                     /**
                      * Execute the intended function
@@ -73,8 +73,8 @@ var router = (function () {
                     /**
                      * Execute After hooks on the result
                      */
-                    if (router.hooks[key] && router.hooks[key].after && router.hooks[key].after.length > 0)
-                        result = executeFunctionArray(router.hooks[key].after, result);
+                    if (this.hooks[key] && this.hooks[key].after && this.hooks[key].after.length > 0)
+                        result = executeFunctionArray(this.hooks[key].after, result);
 
                     return result;
                 };
@@ -82,7 +82,7 @@ var router = (function () {
             } else {
 
                 // If the global is being set to any other type of object or value, just do it.
-                router[key] = value;
+                this[key] = value;
 
             }
 
@@ -93,13 +93,13 @@ var router = (function () {
 
 
     /**
-     * Registers a new before hook on a router method
+     * Registers a new before hook on a method
      *
      * Example:
      * We could add a before hook to generateUID which always set the separator to `+`
      *
      * ```javascript
-     * router.before('generateUID', function(args) {
+     * this.before('generateUID', function(args) {
      *     if (args) args[0] = '+';
      *     return args;
      * });
@@ -107,24 +107,24 @@ var router = (function () {
      *
      * Then, when we called generateUID('-'), we would get a GUID separated by `+` instead.
      *
-     * TODO: Consider moving router.before & router.after to a private namespace to they cannot
+     * TODO: Consider moving this.before & this.after to a private namespace to they cannot
      * be easily accessed by 3rd party code.
      *
      */
     function before (key, func) {
-        if (!router.hooks[key]) router.hooks[key] = {};
-        if (!router.hooks[key].before) router.hooks[key].before = [];
-        router.hooks[key].before.push(func);
+        if (!this.hooks[key]) this.hooks[key] = {};
+        if (!this.hooks[key].before) this.hooks[key].before = [];
+        this.hooks[key].before.push(func);
     }
 
 
     /**
-     * Registers a new after hook on a router method
+     * Registers a new after hook on a this method
      */
     function after (key, func) {
-        if (!router.hooks[key]) router.hooks[key] = {};
-        if (!router.hooks[key].after) router.hooks[key].after = [];
-        router.hooks[key].after.push(func);
+        if (!this.hooks[key]) this.hooks[key] = {};
+        if (!this.hooks[key].after) this.hooks[key].after = [];
+        this.hooks[key].after.push(func);
     }
 
 
@@ -142,10 +142,8 @@ var router = (function () {
         set: set
     };
 
-    obj = $.extend({}, _, obj);
-
     return obj;
-})();
+};
 
 
 
@@ -154,6 +152,12 @@ var router = (function () {
 /****************************************************
  * Router.js-specific functionality
  ***************************************************/
+
+/**
+ * Instantiate the router object from Core()
+ */
+var router = new Core();
+
 
 /**
  * Transition to a named route
