@@ -137,17 +137,3 @@ var Core = function () {
 
     return obj;
 };
-
-
-var foo = new Core();
-
-foo.registerGlobal('bar', function () {
-    console.log('hello!');
-});
-
-foo.bar();
-
-foo.set('zoo', 'lander');
-
-console.log(foo.get('zoo'));
-
